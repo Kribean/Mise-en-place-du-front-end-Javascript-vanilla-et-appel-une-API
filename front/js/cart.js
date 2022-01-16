@@ -8,6 +8,24 @@ let numTotalPrice = 0;
 totalQuant.textContent = numTotalQuant;
 totalPrice.textContent = numTotalPrice;
 
+let prenom = document.getElementById('firstName');
+let nom = document.getElementById('lastName');
+let adresse = document.getElementById('address');
+let ville = document.getElementById('city');
+let email = document.getElementById('email');
+let commande = document.getElementById('order');
+class Contact
+{
+    constructor(leprenom,lenom,laddresse,laville,lemail)
+    {
+        this.prenom = leprenom;
+        this.nom = lenom;
+        this.adresse = laddresse;
+        this.ville = laville;
+        this.email = lemail;
+    }
+}
+
 
 tabKeys.forEach(async (e) =>
     {
@@ -78,6 +96,26 @@ tabKeys.forEach(async (e) =>
                 y.currentTarget.closest('.cart__item').remove();
                 localStorage.removeItem(y.currentTarget.closest('.cart__item').getAttribute("data-id"));
                 tabKeys = Object.keys(localStorage);
+                if (tabKeys.length == 0)
+                {
+                  window.location.href = 'index.html';
+                }
+
+                numTotalPrice = 0;
+                numTotalQuant = 0;
+                tabKeys.forEach(async (e) =>
+                {
+                    let fetchURL = 'http://localhost:3000/api/products/';
+                    fetchURL = fetchURL.concat(e);
+                    let article = await fetch(fetchURL).then(data=>data.json()).then(data => {return data});
+                    
+                    let objLinea = localStorage.getItem(e);
+                    let objJson = JSON.parse(objLinea);
+                    numTotalPrice += article.price*objJson.quantity;
+                    numTotalQuant += parseInt(objJson.quantity);
+                    totalQuant.textContent = numTotalQuant;
+                    totalPrice.textContent = numTotalPrice;
+                })
             })       
     
         })
@@ -91,3 +129,40 @@ tabKeys.forEach(async (e) =>
     })
 
 
+commande.addEventListener('click', (e)=>
+{
+    e.preventDefault();
+    if ((parseInt(totalQuant.textContent)>0) && (parseInt(totalPrice.textContent)>0))
+    {
+
+    let client = new Contact(prenom.value,nom.value,adresse.value,ville.value,email.value);
+    console.log(client);
+    fetch("http://localhost:3000/api/products/order/", {
+	method: 'POST',
+	headers: { 
+    'Accept': 'application/json', 
+    'Content-Type': 'application/json' 
+    },
+        body: JSON.stringify({contact: {
+            firstName: client.prenom,
+            lastName: client.nom,
+            address: client.adresse,
+            city: client.ville,
+            email: client.email
+            },
+            products: tabKeys})
+    })
+    .then(data=>data.json())
+    .then(data => {
+        console.log(data);
+        console.log('hello');
+        window.location.href = 'confirmation.html?id='.concat(data.orderId);
+    
+    });
+
+    }
+    else
+    {
+        console.log("erreur de panier")
+    }
+})

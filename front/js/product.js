@@ -62,9 +62,9 @@ let leCanap;
 function launchCommand(){
     
     boutonAchat.addEventListener('click',()=>{
-        alert('ok');
     let MaCommande = new ElementPanier(idCanap,lesQuantités.value,selectionCouleur.value);
     MaCommande.addBasket();
+    window.location.href = 'cart.html';
     })
 }
 
