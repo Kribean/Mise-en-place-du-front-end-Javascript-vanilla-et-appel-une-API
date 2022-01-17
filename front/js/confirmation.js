@@ -7,3 +7,7 @@ if(search_params.has('id')) {
     idUtilisateur = search_params.get('id');
     orderId.textContent = idUtilisateur ;
 }
+else
+{
+    orderId.textContent = 'Une erreure c\'est produise, avez vous bien validé?' ;
+}

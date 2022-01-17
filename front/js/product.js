@@ -62,9 +62,14 @@ let leCanap;
 function launchCommand(){
     
     boutonAchat.addEventListener('click',()=>{
-    let MaCommande = new ElementPanier(idCanap,lesQuantités.value,selectionCouleur.value);
-    MaCommande.addBasket();
-    window.location.href = 'cart.html';
+
+        if(lesQuantités.reportValidity() && !(selectionCouleur.value==""))
+        {
+            let MaCommande = new ElementPanier(idCanap,lesQuantités.value,selectionCouleur.value);
+            MaCommande.addBasket();
+            window.location.href = 'cart.html';
+        }
+
     })
 }
 

@@ -39,4 +39,7 @@ fetch('http://localhost:3000/api/products')
     unCanap.createCard();
 }
 })
+.catch(function(err) {
+  lesItems.innerHTML = '<h2> Une erreur est survenue. Veuillez actualiser. Si l\' erreur persiste, contactez-nous</h2>'
+});
 

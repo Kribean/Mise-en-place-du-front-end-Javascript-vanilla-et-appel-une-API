@@ -31,7 +31,9 @@ tabKeys.forEach(async (e) =>
     {
         let fetchURL = 'http://localhost:3000/api/products/';
         fetchURL = fetchURL.concat(e);
-        let article = await fetch(fetchURL).then(data=>data.json()).then(data => {return data});
+        let article = await fetch(fetchURL).then(data=>data.json()).then(data => {return data}).catch(function(err) {
+          sectionArticle.innerHTML = '<h2> Une erreur est survenue. Veuillez actualiser. Si l\' erreur persiste, contactez-nous</h2>'
+        });
         
         let objLinea = localStorage.getItem(e);
         let objJson = JSON.parse(objLinea);
@@ -49,7 +51,7 @@ tabKeys.forEach(async (e) =>
           <div class="cart__item__content__settings">
             <div class="cart__item__content__settings__quantity">
               <p>Qté : </p>
-              <input type="number" class="itemQuantity" name="itemQuantity" min="1" max="100" value=${objJson.quantity}>
+              <input type="number" class="itemQuantity" name="itemQuantity" min="1" max="100"  value=${objJson.quantity}>
             </div>
             <div class="cart__item__content__settings__delete">
               <p class="deleteItem">Supprimer</p>
@@ -62,28 +64,31 @@ tabKeys.forEach(async (e) =>
       let modifierNbr = document.querySelectorAll('.itemQuantity');
       modifierNbr.forEach((x)=>{
           x.addEventListener('change',(r)=>{
-            
-            let currentComand = localStorage.getItem(r.currentTarget.closest('.cart__item').getAttribute("data-id"));
-            let currentComandJson = JSON.parse(objLinea);
-            currentComandJson.quantity= r.currentTarget.value;
-            let currentComandLinea = JSON.stringify(currentComandJson);
-            localStorage.setItem(r.currentTarget.closest('.cart__item').getAttribute("data-id"),currentComandLinea);
-
-            numTotalPrice = 0;
-            numTotalQuant = 0;
-            tabKeys.forEach(async (e) =>
+            if(x.reportValidity())
             {
-                let fetchURL = 'http://localhost:3000/api/products/';
-                fetchURL = fetchURL.concat(e);
-                let article = await fetch(fetchURL).then(data=>data.json()).then(data => {return data});
-                
-                let objLinea = localStorage.getItem(e);
-                let objJson = JSON.parse(objLinea);
-                numTotalPrice += article.price*objJson.quantity;
-                numTotalQuant += parseInt(objJson.quantity);
-                totalQuant.textContent = numTotalQuant;
-                totalPrice.textContent = numTotalPrice;
-            })
+              let currentComand = localStorage.getItem(r.currentTarget.closest('.cart__item').getAttribute("data-id"));
+              let currentComandJson = JSON.parse(objLinea);
+              currentComandJson.quantity= r.currentTarget.value;
+              let currentComandLinea = JSON.stringify(currentComandJson);
+              localStorage.setItem(r.currentTarget.closest('.cart__item').getAttribute("data-id"),currentComandLinea);
+  
+              numTotalPrice = 0;
+              numTotalQuant = 0;
+              tabKeys.forEach(async (e) =>
+              {
+                  let fetchURL = 'http://localhost:3000/api/products/';
+                  fetchURL = fetchURL.concat(e);
+                  let article = await fetch(fetchURL).then(data=>data.json()).then(data => {return data});
+                  
+                  let objLinea = localStorage.getItem(e);
+                  let objJson = JSON.parse(objLinea);
+                  numTotalPrice += article.price*objJson.quantity;
+                  numTotalQuant += parseInt(objJson.quantity);
+                  totalQuant.textContent = numTotalQuant;
+                  totalPrice.textContent = numTotalPrice;
+              })
+            }
+
 
             
           })       
@@ -132,11 +137,29 @@ tabKeys.forEach(async (e) =>
 commande.addEventListener('click', (e)=>
 {
     e.preventDefault();
+    let lesValiditeDeChamps = true
     if ((parseInt(totalQuant.textContent)>0) && (parseInt(totalPrice.textContent)>0))
     {
+      for (let input of document.querySelectorAll(".cart__order__form input"))
+      {
+        if(input.getAttribute('type')!='submit')
+        {
+          if(!(input.reportValidity()))
+          {
+            lesValiditeDeChamps = false;
+            document.getElementById(input.getAttribute('id').concat('ErrorMsg')).textContent="Vous avez mal complété ce champ";
+          }
+          else
+          {
+            document.getElementById(input.getAttribute('id').concat('ErrorMsg')).textContent="";
+          };
+
+          
+        }
+
+      }
 
     let client = new Contact(prenom.value,nom.value,adresse.value,ville.value,email.value);
-    console.log(client);
     fetch("http://localhost:3000/api/products/order/", {
 	method: 'POST',
 	headers: { 
@@ -154,15 +177,18 @@ commande.addEventListener('click', (e)=>
     })
     .then(data=>data.json())
     .then(data => {
-        console.log(data);
-        console.log('hello');
-        window.location.href = 'confirmation.html?id='.concat(data.orderId);
+  
+        if(lesValiditeDeChamps)
+        {
+          window.location.href = 'confirmation.html?id='.concat(data.orderId);
+        }
+       
     
     });
 
     }
     else
     {
-        console.log("erreur de panier")
+        alert("erreur de panier")
     }
 })
