@@ -65,7 +65,7 @@ function calculateQuantPrice(tableau)
   tableau.forEach(async (e) =>
   {
       let fetchURL = 'http://localhost:3000/api/products/';
-      fetchURL = fetchURL.concat(e.replace('awu',''));
+      fetchURL = fetchURL.concat(e.split('awu')[0]);
       let article = await fetch(fetchURL).then(data=>data.json()).then(data => {return data});
       
       let objLinea = localStorage.getItem(e);
@@ -79,7 +79,7 @@ function calculateQuantPrice(tableau)
 tabKeys.forEach(async (e) =>
     {
         let fetchURL = 'http://localhost:3000/api/products/';
-        let et = e.replace('awu','');//nettoyage de l'id product pour une insertion dans l'url
+        let et = e.split('awu')[0];//nettoyage de l'id product pour une insertion dans l'url
         fetchURL = fetchURL.concat(et);
         let article = await fetch(fetchURL).then(data=>data.json()).then(data => {return data}).catch(function(err) {
           sectionArticle.innerHTML = '<h2> Une erreur est survenue. Veuillez actualiser. Si l\' erreur persiste, contactez-nous</h2>'
@@ -89,7 +89,7 @@ tabKeys.forEach(async (e) =>
         let objJson = JSON.parse(objLinea);
 
         //Mise en place des différentes cartes correspondantes aux achats souhaités par le client
-        sectionArticle.innerHTML += ` <article class="cart__item" data-id="${e.replace('awu','')}" data-color="${objJson.color}">
+        sectionArticle.innerHTML += ` <article class="cart__item" data-id="${e.split('awu')[0]}" data-color="${objJson.color}">
         <div class="cart__item__img">
           <img src="${article.imageUrl}" alt="${article.altTxt}">
         </div>
@@ -119,9 +119,11 @@ tabKeys.forEach(async (e) =>
             {
 
               let currentComandJson = JSON.parse(objLinea);
+              console.log('couleur');
+              console.log(currentComandJson.color);
               currentComandJson.quantity= r.currentTarget.value;
               let currentComandLinea = JSON.stringify(currentComandJson);
-              localStorage.setItem(r.currentTarget.closest('.cart__item').getAttribute("data-id").concat('awu'),currentComandLinea);
+              localStorage.setItem(r.currentTarget.closest('.cart__item').getAttribute("data-id").concat('awu').concat(r.currentTarget.closest('.cart__item').getAttribute("data-color")),currentComandLinea);
   
               calculateQuantPrice(tabKeys);
             }
@@ -137,7 +139,7 @@ tabKeys.forEach(async (e) =>
         supprimerBtn.forEach((x)=>{
             x.addEventListener('click',(y)=>{
                 y.currentTarget.closest('.cart__item').remove();//supprime la carte html
-                localStorage.removeItem(y.currentTarget.closest('.cart__item').getAttribute("data-id").concat('awu')); //supprime l'élément dans le panier
+                localStorage.removeItem(y.currentTarget.closest('.cart__item').getAttribute("data-id").concat('awu').concat(y.currentTarget.closest('.cart__item').getAttribute("data-color"))); //supprime l'élément dans le panier
                 tabKeysBrut = Object.keys(localStorage); //update le nouveau tableau de clés id
                 tabKeys = tabKeysBrut.filter(key => key.includes('awu')); 
 
@@ -192,7 +194,7 @@ commande.addEventListener('click', (e)=>
     let tabKeysPost = [];
     for(let i = 0; i<tabKeys.length;i++)
     {
-      tabKeysPost.push(tabKeys[i].replace('awu',''))
+      tabKeysPost.push(tabKeys[i].split('awu')[0])
     }
 
     fetch("http://localhost:3000/api/products/order/", {

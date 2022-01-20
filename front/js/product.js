@@ -69,7 +69,7 @@ class ElementPanier
             color : this.color
         }
         let objLinea = JSON.stringify(objJson);
-        localStorage.setItem(this.id.concat('awu'),objLinea);
+        localStorage.setItem(this.id.concat('awu').concat(this.color),objLinea);
     }
 
 }
