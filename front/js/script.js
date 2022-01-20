@@ -49,8 +49,9 @@ class Canape
 
 
 /**
- * Appel à l'api pour récupérer toutes les fiches  fauteil
+ * Appel à l'api pour récupérer toutes les fiches fauteilles
  * Récupération de chaque article et création d'une card pour l'afficher sur index.html
+ * Si il y a une erreur avec l'api, on indique à l'utilisateur un message d'erreur sur la page index.html
  */
 fetch('http://localhost:3000/api/products')
 .then(data=>data.json())
