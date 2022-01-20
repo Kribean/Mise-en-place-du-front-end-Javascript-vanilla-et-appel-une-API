@@ -16,9 +16,6 @@ let boutonAchat = document.getElementById('addToCart');
 
 
 
-
-
-
 class Canape
 {
     constructor(colors,id,name,price,imageUrl,description,altTxt)
@@ -50,7 +47,7 @@ class ElementPanier
             color : this.color
         }
         let objLinea = JSON.stringify(objJson);
-        localStorage.setItem(this.id,objLinea);
+        localStorage.setItem(this.id.concat('awu'),objLinea);
     }
 
 }
@@ -90,8 +87,6 @@ if(search_params.has('id')) {
     });
     }
 );
-    
-    
 launchCommand();
 }
 else{

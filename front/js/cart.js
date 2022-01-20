@@ -1,4 +1,5 @@
-let tabKeys = Object.keys(localStorage);
+let tabKeysBrut = Object.keys(localStorage);
+let tabKeys = tabKeysBrut.filter(key => key.includes('awu'));
 let sectionArticle = document.getElementById('cart__items');
 
 let totalQuant = document.getElementById('totalQuantity');
@@ -14,6 +15,7 @@ let adresse = document.getElementById('address');
 let ville = document.getElementById('city');
 let email = document.getElementById('email');
 let commande = document.getElementById('order');
+
 class Contact
 {
     constructor(leprenom,lenom,laddresse,laville,lemail)
@@ -26,11 +28,37 @@ class Contact
     }
 }
 
+function showQuantPrice(meubleCatalogue,commandes)
+{
+  numTotalPrice += meubleCatalogue.price*commandes.quantity;
+  numTotalQuant += parseInt(commandes.quantity);
+  totalQuant.textContent = numTotalQuant;
+  totalPrice.textContent = numTotalPrice;
+}
+
+function calculateQuantPrice(tableau)
+{
+  numTotalPrice = 0;
+  numTotalQuant = 0;
+  tableau.forEach(async (e) =>
+  {
+      let fetchURL = 'http://localhost:3000/api/products/';
+      fetchURL = fetchURL.concat(e.replace('awu',''));
+      let article = await fetch(fetchURL).then(data=>data.json()).then(data => {return data});
+      
+      let objLinea = localStorage.getItem(e);
+      let objJson = JSON.parse(objLinea);
+      showQuantPrice(article,objJson);
+
+  })
+}
+
 
 tabKeys.forEach(async (e) =>
     {
         let fetchURL = 'http://localhost:3000/api/products/';
-        fetchURL = fetchURL.concat(e);
+        let et = e.replace('awu','');
+        fetchURL = fetchURL.concat(et);
         let article = await fetch(fetchURL).then(data=>data.json()).then(data => {return data}).catch(function(err) {
           sectionArticle.innerHTML = '<h2> Une erreur est survenue. Veuillez actualiser. Si l\' erreur persiste, contactez-nous</h2>'
         });
@@ -38,7 +66,7 @@ tabKeys.forEach(async (e) =>
         let objLinea = localStorage.getItem(e);
         let objJson = JSON.parse(objLinea);
 
-        sectionArticle.innerHTML += ` <article class="cart__item" data-id="${e}" data-color="${objJson.color}">
+        sectionArticle.innerHTML += ` <article class="cart__item" data-id="${e.replace('awu','')}" data-color="${objJson.color}">
         <div class="cart__item__img">
           <img src="${article.imageUrl}" alt="${article.altTxt}">
         </div>
@@ -66,27 +94,13 @@ tabKeys.forEach(async (e) =>
           x.addEventListener('change',(r)=>{
             if(x.reportValidity())
             {
-              let currentComand = localStorage.getItem(r.currentTarget.closest('.cart__item').getAttribute("data-id"));
+
               let currentComandJson = JSON.parse(objLinea);
               currentComandJson.quantity= r.currentTarget.value;
               let currentComandLinea = JSON.stringify(currentComandJson);
-              localStorage.setItem(r.currentTarget.closest('.cart__item').getAttribute("data-id"),currentComandLinea);
+              localStorage.setItem(r.currentTarget.closest('.cart__item').getAttribute("data-id").concat('awu'),currentComandLinea);
   
-              numTotalPrice = 0;
-              numTotalQuant = 0;
-              tabKeys.forEach(async (e) =>
-              {
-                  let fetchURL = 'http://localhost:3000/api/products/';
-                  fetchURL = fetchURL.concat(e);
-                  let article = await fetch(fetchURL).then(data=>data.json()).then(data => {return data});
-                  
-                  let objLinea = localStorage.getItem(e);
-                  let objJson = JSON.parse(objLinea);
-                  numTotalPrice += article.price*objJson.quantity;
-                  numTotalQuant += parseInt(objJson.quantity);
-                  totalQuant.textContent = numTotalQuant;
-                  totalPrice.textContent = numTotalPrice;
-              })
+              calculateQuantPrice(tabKeys);
             }
 
 
@@ -99,36 +113,20 @@ tabKeys.forEach(async (e) =>
         supprimerBtn.forEach((x)=>{
             x.addEventListener('click',(y)=>{
                 y.currentTarget.closest('.cart__item').remove();
-                localStorage.removeItem(y.currentTarget.closest('.cart__item').getAttribute("data-id"));
-                tabKeys = Object.keys(localStorage);
+                localStorage.removeItem(y.currentTarget.closest('.cart__item').getAttribute("data-id").concat('awu'));
+                tabKeysBrut = Object.keys(localStorage);
+                tabKeys = tabKeysBrut.filter(key => key.includes('awu'));
                 if (tabKeys.length == 0)
                 {
                   window.location.href = 'index.html';
                 }
 
-                numTotalPrice = 0;
-                numTotalQuant = 0;
-                tabKeys.forEach(async (e) =>
-                {
-                    let fetchURL = 'http://localhost:3000/api/products/';
-                    fetchURL = fetchURL.concat(e);
-                    let article = await fetch(fetchURL).then(data=>data.json()).then(data => {return data});
-                    
-                    let objLinea = localStorage.getItem(e);
-                    let objJson = JSON.parse(objLinea);
-                    numTotalPrice += article.price*objJson.quantity;
-                    numTotalQuant += parseInt(objJson.quantity);
-                    totalQuant.textContent = numTotalQuant;
-                    totalPrice.textContent = numTotalPrice;
-                })
+                calculateQuantPrice(tabKeys);
             })       
     
         })
     
-        numTotalPrice += article.price*objJson.quantity;
-        numTotalQuant += parseInt(objJson.quantity);
-        totalQuant.textContent = numTotalQuant;
-        totalPrice.textContent = numTotalPrice;
+        showQuantPrice(article,objJson);
 
 
     })
@@ -137,7 +135,7 @@ tabKeys.forEach(async (e) =>
 commande.addEventListener('click', (e)=>
 {
     e.preventDefault();
-    let lesValiditeDeChamps = true
+    let lesValiditeDeChamps = true;
     if ((parseInt(totalQuant.textContent)>0) && (parseInt(totalPrice.textContent)>0))
     {
       for (let input of document.querySelectorAll(".cart__order__form input"))
@@ -160,6 +158,13 @@ commande.addEventListener('click', (e)=>
       }
 
     let client = new Contact(prenom.value,nom.value,adresse.value,ville.value,email.value);
+
+    let tabKeysPost = [];
+    for(let i = 0; i<tabKeys.length;i++)
+    {
+      tabKeysPost.push(tabKeys[i].replace('awu',''))
+    }
+
     fetch("http://localhost:3000/api/products/order/", {
 	method: 'POST',
 	headers: { 
@@ -173,7 +178,7 @@ commande.addEventListener('click', (e)=>
             city: client.ville,
             email: client.email
             },
-            products: tabKeys})
+            products: tabKeysPost})
     })
     .then(data=>data.json())
     .then(data => {
