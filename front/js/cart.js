@@ -1,7 +1,7 @@
-
+import Basket from './Basket.js'
+let panier = new Basket();
 //Déclaration des tableaux et variables liées au panier
-let tabKeysBrut = Object.keys(localStorage);
-let tabKeys = tabKeysBrut.filter(key => key.includes('awu'));
+let tabKeys = panier.getKeys();
 let totalQuant = document.getElementById('totalQuantity');
 let totalPrice = document.getElementById('totalPrice');
 let numTotalQuant = 0;
@@ -42,20 +42,20 @@ class Contact
 /**
  * @name showQuantPrice
  * @param {*} meubleCatalogue -correspond à la fiche du meuble sourcé directement via l'api. Elle contient notemment le prix unitaire d'un meuble
- * @param {*} commandes -correspond au meuble et au nombre de ce meuble souhaité par le client
+ * @param {*} quantiteDeCommandes -correspond au nombre de meuble souhaité par le client
  * @returns cette fonction a pour but d'updater et calculer le prix pour un même article qui sera acheté par le client
  */
-function showQuantPrice(meubleCatalogue,commandes)
+function showQuantPrice(meubleCatalogue,quantiteDeCommandes)
 {
-  numTotalPrice += meubleCatalogue.price*commandes.quantity;
-  numTotalQuant += parseInt(commandes.quantity);
+  numTotalPrice += meubleCatalogue.price*quantiteDeCommandes;
+  numTotalQuant += parseInt(quantiteDeCommandes);
   totalQuant.textContent = numTotalQuant;
   totalPrice.textContent = numTotalPrice;
 }
 
 /**
  * @name calculateQuantPrice
- * @param {*} tableau - cette input correspond aux clés des articles que le client souhaite acheter. Le type est un tableau de string
+ * @param {*} tableau - cette input correspond aux tableaux décrivant chaque article du panier 
  * @returns cette fonction a pour but d'updater et calculer le prix total et le nombre d'articles total qui sera acheté par le client
  */
 function calculateQuantPrice(tableau)
@@ -65,44 +65,39 @@ function calculateQuantPrice(tableau)
   tableau.forEach(async (e) =>
   {
       let fetchURL = 'http://localhost:3000/api/products/';
-      fetchURL = fetchURL.concat(e.split('awu')[0]);
+      fetchURL = fetchURL.concat(e.id);
       let article = await fetch(fetchURL).then(data=>data.json()).then(data => {return data});
       
-      let objLinea = localStorage.getItem(e);
-      let objJson = JSON.parse(objLinea);
-      showQuantPrice(article,objJson);
+      showQuantPrice(article,e.quantity);
 
   })
 }
 
 /*Update de la page cart.html. Cette section permet à l'utilisateur de voir ses commandes, les modifier ou les supprimer*/
-tabKeys.forEach(async (e) =>
+panier.basket.forEach(async (e) =>
     {
         let fetchURL = 'http://localhost:3000/api/products/';
-        let et = e.split('awu')[0];//nettoyage de l'id product pour une insertion dans l'url
-        fetchURL = fetchURL.concat(et);
+        fetchURL = fetchURL.concat(e.id);
         let article = await fetch(fetchURL).then(data=>data.json()).then(data => {return data}).catch(function(err) {
           sectionArticle.innerHTML = '<h2> Une erreur est survenue. Veuillez actualiser. Si l\' erreur persiste, contactez-nous</h2>'
         });
         
-        let objLinea = localStorage.getItem(e);
-        let objJson = JSON.parse(objLinea);
 
         //Mise en place des différentes cartes correspondantes aux achats souhaités par le client
-        sectionArticle.innerHTML += ` <article class="cart__item" data-id="${e.split('awu')[0]}" data-color="${objJson.color}">
+        sectionArticle.innerHTML += ` <article class="cart__item" data-id="${e.id}" data-color="${e.color}">
         <div class="cart__item__img">
           <img src="${article.imageUrl}" alt="${article.altTxt}">
         </div>
         <div class="cart__item__content">
           <div class="cart__item__content__description">
             <h2>${article.name}</h2>
-            <p>${objJson.color}</p>
+            <p>${e.color}</p>
             <p>${article.price} €</p>
           </div>
           <div class="cart__item__content__settings">
             <div class="cart__item__content__settings__quantity">
               <p>Qté : </p>
-              <input type="number" class="itemQuantity" name="itemQuantity" min="1" max="100"  value=${objJson.quantity}>
+              <input type="number" class="itemQuantity" name="itemQuantity" min="1" max="100"  value=${e.quantity}>
             </div>
             <div class="cart__item__content__settings__delete">
               <p class="deleteItem">Supprimer</p>
@@ -117,15 +112,9 @@ tabKeys.forEach(async (e) =>
           x.addEventListener('change',(r)=>{
             if(x.reportValidity())
             {
-
-              let currentComandJson = JSON.parse(objLinea);
-              console.log('couleur');
-              console.log(currentComandJson.color);
-              currentComandJson.quantity= r.currentTarget.value;
-              let currentComandLinea = JSON.stringify(currentComandJson);
-              localStorage.setItem(r.currentTarget.closest('.cart__item').getAttribute("data-id").concat('awu').concat(r.currentTarget.closest('.cart__item').getAttribute("data-color")),currentComandLinea);
-  
-              calculateQuantPrice(tabKeys);
+              panier.changeQuantity(r.currentTarget.closest('.cart__item').getAttribute("data-id"),r.currentTarget.value,r.currentTarget.closest('.cart__item').getAttribute("data-color"));
+              
+              calculateQuantPrice(panier.basket);
             }
 
 
@@ -139,22 +128,20 @@ tabKeys.forEach(async (e) =>
         supprimerBtn.forEach((x)=>{
             x.addEventListener('click',(y)=>{
                 y.currentTarget.closest('.cart__item').remove();//supprime la carte html
-                localStorage.removeItem(y.currentTarget.closest('.cart__item').getAttribute("data-id").concat('awu').concat(y.currentTarget.closest('.cart__item').getAttribute("data-color"))); //supprime l'élément dans le panier
-                tabKeysBrut = Object.keys(localStorage); //update le nouveau tableau de clés id
-                tabKeys = tabKeysBrut.filter(key => key.includes('awu')); 
+                panier.removeFromBasket(y.currentTarget.closest('.cart__item').getAttribute("data-id"),y.currentTarget.closest('.cart__item').getAttribute("data-color"));//supprime l'élément dans le panier 
 
                 //si l'utilisateur supprime tous les articles, la page cart.js ne présente plus d'article. On renvoie donc l'utilisateur sur la page principale
-                if (tabKeys.length == 0)
+                if (panier.basket.length == 0)
                 {
                   window.location.href = 'index.html';
                 }
 
-                calculateQuantPrice(tabKeys);
+                calculateQuantPrice(panier.basket);
             })       
     
         })
     
-        showQuantPrice(article,objJson);
+        showQuantPrice(article,e.quantity);
 
 
     })
@@ -190,12 +177,8 @@ commande.addEventListener('click', (e)=>
     //construction de la fiche client
     let client = new Contact(prenom.value,nom.value,adresse.value,ville.value,email.value);
     
-    //création de la liste d'id qui sera envoyé à l'API. Pour une id propre il faut enlever le suffixe awu qui permettait au code de bien dissocier le panier pour ce site dans localstorage
-    let tabKeysPost = [];
-    for(let i = 0; i<tabKeys.length;i++)
-    {
-      tabKeysPost.push(tabKeys[i].split('awu')[0])
-    }
+    //création de la liste d'id qui sera envoyé à l'API.
+    let tabKeysPost = panier.getKeys();
 
     fetch("http://localhost:3000/api/products/order/", {
 	method: 'POST',

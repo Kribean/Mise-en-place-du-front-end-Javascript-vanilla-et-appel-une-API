@@ -1,3 +1,6 @@
+import Basket from './Basket.js'
+let panier = new Basket(); //mise à disposition du panier contenant les commandes
+
 //Déclaration des variables nécessaires à l'utilisation de l'api
 let url = new URL(window.location.href); //adresse contenant l'id du meuble choisi
 let search_params = new URLSearchParams(url.search); //recherche de l'id dans l'url
@@ -42,42 +45,6 @@ class Canape
 
 
 /**
- * @name ElementPanier
- * On crée l'objet contenant l'id, la quantité et la couleur du meuble choisi pour l'insérer dans le localstorage
- * Des informations comme le prix ne seront pas enregistrer
- */
-class ElementPanier
-{
-    constructor(id, quantity,color)
-    {
-        this.id = id;
-        this.quantity = quantity;
-        this.color = color;
-    }
-
-/**
- * @name addBasket
- * Ajoute la commande dans un espace de sauvegarde lié au navigateur web, le localstorage
- * Cela permettra d'avoir un récapitulatif de toutes les commandes effectué
- * Note: dans le local storage, la stratégie adoptée pour permettre d'identifier et de différentier les commandes effectuées sur notre site
- * est d'identifier toute commande par un suffixe choisi arbitrairement 'awu'.
- * Ainsi tout élément comportant ce suffixe correspond à une commande de meuble.
- */
-    addBasket(){
-        let objJson = {
-            quantity : this.quantity,
-            color : this.color
-        }
-        let objLinea = JSON.stringify(objJson);
-        localStorage.setItem(this.id.concat('awu').concat(this.color),objLinea);
-    }
-
-}
-
-
-
-
-/**
  * @name launchCommand
  * Une fois la commande faites (choix de couleur et nombres de meubles), le client valide sa commande et
  * est envoyé sur la page récapitulative de toutes ses commandes: cart.html.
@@ -90,8 +57,7 @@ function launchCommand(){
 
         if(lesQuantités.reportValidity() && !(selectionCouleur.value==""))
         {
-            let MaCommande = new ElementPanier(idCanap,lesQuantités.value,selectionCouleur.value);
-            MaCommande.addBasket();
+            panier.addBasket(idCanap,lesQuantités.value,selectionCouleur.value);
             window.location.href = 'cart.html';
         }
 
