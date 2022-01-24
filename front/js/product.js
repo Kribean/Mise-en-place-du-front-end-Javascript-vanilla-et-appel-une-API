@@ -58,7 +58,7 @@ function launchCommand(){
         if(lesQuantités.reportValidity() && !(selectionCouleur.value==""))
         {
             panier.addBasket(idCanap,lesQuantités.value,selectionCouleur.value);
-            window.location.href = 'cart.html';
+            window.location.assign('cart.html');
         }
 
     })

@@ -133,7 +133,7 @@ panier.basket.forEach(async (e) =>
                 //si l'utilisateur supprime tous les articles, la page cart.js ne présente plus d'article. On renvoie donc l'utilisateur sur la page principale
                 if (panier.basket.length == 0)
                 {
-                  window.location.href = 'index.html';
+                  window.location.assign('index.html');
                 }
 
                 calculateQuantPrice(panier.basket);
@@ -201,7 +201,7 @@ commande.addEventListener('click', (e)=>
         if(lesValiditeDeChamps)
         {
           //envoie l'utilisateur sur la page de confirmation une fois toutes les informations validées
-          window.location.href = 'confirmation.html?id='.concat(data.orderId);
+          window.location.assign('confirmation.html?id='.concat(data.orderId));
         }
        
     
